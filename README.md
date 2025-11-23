@@ -7,11 +7,11 @@ An intelligent voice-based mock interview system that listens to you, understand
 
 Interview Practice Partner is an end-to-end AI interview simulation platform that allows users to practice interviews using their voice.
 
-The system behaves like a real interviewer:
+It behaves like a real interviewer:
 
 🎤 Listens to your spoken answers
 
-🧠 Uses AI to understand your response
+🧠 Understands your response using AI
 
 🔍 Asks meaningful follow-up questions
 
@@ -19,57 +19,55 @@ The system behaves like a real interviewer:
 
 📄 Generates a structured interview summary
 
-This provides a natural, immersive interview experience, helping candidates build communication skills and confidence.
+This offers a natural, immersive mock interview experience that helps users build confidence and communication skills.
 
 🔥 Key Features
 🎧 Voice-Based Interaction
 
-Browser audio recording using MediaRecorder API
+Browser recording using MediaRecorder API
 
-Accurate STT through Google Gemini
+Accurate STT with Google Gemini
 
-Real-time question and follow-up generation
+Real-time question & follow-up generation
 
 🧠 Dynamic Interview Engine
 
-Fully custom Python interview logic
+Custom Python logic engine
 
 Maintains conversation memory
 
-Supports role-specific questions
-
-Generates deeper follow-up questions based on user responses
+Supports role-based and deep-dive questions
 
 🔊 AI Voice Output
 
-Questions converted to realistic voice using gTTS
+Smooth TTS using gTTS
 
-Audio streamed as MP3 from the backend
+MP3 audio streaming directly from backend
 
-🖥️ Modern & Clean UI
+🖥️ Modern UI
 
-Built with React + Tailwind CSS
+React + Tailwind CSS
 
-Chat-style UI
+Chat interface
 
-Easy role selection
+Role selection
 
-Summary popup at the end of the interview
+End-of-interview summary modal
 
 🏗️ Architecture
 ┌───────────────────┐                   ┌──────────────────────────┐
-│     Frontend       │  audio/webm      │        Backend API       │
-│   (React + JS)     │ ───────────────▶│     (FastAPI + Python)   │
-│ - MediaRecorder     │                 │ - Gemini STT             │
-│ - Chat UI           │◀───────────────│ - Interview Engine       │
-│ - Summary Modal     │   mp3 (TTS)     │ - gTTS                   │
+│     Frontend       │   audio/webm     │        Backend API        │
+│   (React + JS)     │ ───────────────▶ │    (FastAPI + Python)     │
+│ - MediaRecorder     │                  │ - Gemini STT              │
+│ - Chat UI           │ ◀────────────── │ - Interview Engine        │
+│ - Summary Modal     │     mp3 (TTS)    │ - gTTS                    │
 └───────────────────┘                   └──────────────────────────┘
-                                                   │
-                                                   ▼
-                                         ┌───────────────────┐
-                                         │   Gemini AI API   │
-                                         │  (Reasoning + STT)│
-                                         └───────────────────┘
+                                                    │
+                                                    ▼
+                                          ┌───────────────────┐
+                                          │   Gemini AI API   │
+                                          │ (Reasoning + STT) │
+                                          └───────────────────┘
 
 🛠️ Tech Stack
 Frontend
@@ -80,7 +78,7 @@ Tailwind CSS
 
 MediaRecorder API
 
-HTML5 Audio API
+HTML5 Audio
 
 Backend
 
@@ -90,17 +88,17 @@ Python 3.11
 
 Uvicorn
 
-Google Gemini API (STT + NLP)
+Google Gemini API
 
-gTTS (text-to-speech)
+gTTS
 
 Other
 
 Temporary audio storage in /tmp/
 
-Environment variables for API keys
+Secure API key handling
 
-Structured REST endpoints
+Clean REST architecture
 
 📡 API Endpoints
 POST /voice/start-interview
@@ -109,35 +107,35 @@ Starts a new interview and returns the first question + TTS audio.
 
 POST /voice/continue
 
-Receives user audio → Converts to text → Generates next question → Returns audio + text.
+Receives user audio → Converts to text → Generates next question → Returns both text & audio.
 
 GET /voice/summary
 
-Generates a complete structured interview summary.
+Generates the complete interview summary.
 
 POST /voice/stt
 
-Standalone speech-to-text.
+Standalone speech-to-text API.
 
 POST /voice/tts
 
-Standalone text-to-speech.
+Standalone text-to-speech API.
 
-💡 Interview Engine (Custom-Built)
+💡 Custom Interview Engine
 
-This project includes a custom rule-based + AI-assisted interview engine:
+The project includes a custom interview engine that:
 
 Generates role-specific questions
 
-Analyzes user answers
+Understands user answers
 
-Detects opportunities for deep-dive follow-up questions
+Detects when to ask follow-up questions
 
-Maintains conversation context and answer history
+Maintains full interview history
 
-Produces a complete summary with strengths, weaknesses, and recommendations
+Generates detailed final summary
 
-This highlights strong backend engineering, prompting, and state management skills.
+This showcases advanced backend logic, state management, and AI prompting skills.
 
 📁 Project Structure
 backend/
@@ -162,85 +160,78 @@ frontend/
  └── public/
 
 ⚙️ Installation & Setup
-1️⃣ Backend Setup
+1️⃣ Backend
 cd backend
 python -m venv venv
-venv\Scripts\activate   # (or source venv/bin/activate)
+venv\Scripts\activate   # or source venv/bin/activate
 pip install -r requirements.txt
 set GEMINI_API_KEY=your_api_key_here
 uvicorn app.main:app --reload
 
-2️⃣ Frontend Setup
+2️⃣ Frontend
 cd frontend
 npm install
 npm start
 
 🚀 How to Use
 
-Open the frontend.
+Open the frontend
 
-Choose an interview role (Frontend, Backend, AI/ML, HR, etc.)
+Select a role (Frontend, Backend, AI/ML, HR, etc.)
 
 Click Start Interview
 
-Hold the Mic button to speak your answer
+Press Hold to Answer and speak
 
-Receive AI-generated follow-up questions with TTS
+Receive the next AI-generated question
 
-After the final round, click Show Summary
+At the end, click Show Summary
 
-View the complete evaluation:
+You will see:
 
 Strengths
 
 Improvement areas
 
-Communication analysis
+Technical understanding
 
-Technical depth score
+Communication analysis
 
 🌟 Why This Project Stands Out
 
-Combines Voice + AI + Full-Stack Engineering
+Voice + AI + Full-stack system
 
-End-to-end system with:
+Real-time audio → STT → NLP → TTS flow
 
-Audio recording
+Custom interview logic engine
 
-STT
+Modern frontend + scalable backend
 
-NLP-based interview
-
-TTS output
-
-Modern UI
-
-Practical, real-world use case
-
-Showcases:
+Strong demonstration of:
 
 API design
 
 AI prompting
 
+Audio processing
+
 System architecture
 
-Full-stack capability
+Practical engineering
 
-A perfect addition to any portfolio.
+Perfect addition to a professional portfolio.
 
 🏁 Future Enhancements
 
-Multiple interviewer personas
+Multi-interviewer personas
 
-Scoring and analytics dashboard
+Scoring analytics
 
-Replace gTTS with Neural TTS
+Neural TTS
 
-Add progress tracking
+Progress tracking
 
 Mobile app version
-
 
 🙌 Acknowledgements
 
