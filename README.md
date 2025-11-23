@@ -55,19 +55,7 @@ Role selection
 End-of-interview summary modal
 
 🏗️ Architecture
-┌───────────────────┐                   ┌──────────────────────────┐
-│     Frontend       │   audio/webm     │        Backend API        │
-│   (React + JS)     │ ───────────────▶ │    (FastAPI + Python)     │
-│ - MediaRecorder     │                  │ - Gemini STT              │
-│ - Chat UI           │ ◀────────────── │ - Interview Engine        │
-│ - Summary Modal     │     mp3 (TTS)    │ - gTTS                    │
-└───────────────────┘                   └──────────────────────────┘
-                                                    │
-                                                    ▼
-                                          ┌───────────────────┐
-                                          │   Gemini AI API   │
-                                          │ (Reasoning + STT) │
-                                          └───────────────────┘
+<img width="2291" height="665" alt="image" src="https://github.com/user-attachments/assets/b860413a-3a8e-41b1-9702-776fe6415435" />
 
 🛠️ Tech Stack
 Frontend
@@ -241,31 +229,4 @@ FastAPI Community
 
 React Community
 
-flowchart LR
-    A[Frontend<br/>(React + JS)] 
-    A -->|audio/webm| B[Backend API<br/>(FastAPI + Python)]
-    
-    B -->|mp3 (TTS)| A
-
-    B --> C[Gemini AI API<br/>(Reasoning + STT)]
-    
-    subgraph Frontend
-        F1[MediaRecorder]
-        F2[Chat UI]
-        F3[Summary Modal]
-    end
-
-    subgraph Backend
-        B1[Gemini STT]
-        B2[Interview Engine]
-        B3[gTTS]
-    end
-
-    A --> F1
-    A --> F2
-    A --> F3
-    B --> B1
-    B --> B2
-    B --> B3
-    C --> B
 
