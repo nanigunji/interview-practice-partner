@@ -241,3 +241,31 @@ FastAPI Community
 
 React Community
 
+flowchart LR
+    A[Frontend<br/>(React + JS)] 
+    A -->|audio/webm| B[Backend API<br/>(FastAPI + Python)]
+    
+    B -->|mp3 (TTS)| A
+
+    B --> C[Gemini AI API<br/>(Reasoning + STT)]
+    
+    subgraph Frontend
+        F1[MediaRecorder]
+        F2[Chat UI]
+        F3[Summary Modal]
+    end
+
+    subgraph Backend
+        B1[Gemini STT]
+        B2[Interview Engine]
+        B3[gTTS]
+    end
+
+    A --> F1
+    A --> F2
+    A --> F3
+    B --> B1
+    B --> B2
+    B --> B3
+    C --> B
+
