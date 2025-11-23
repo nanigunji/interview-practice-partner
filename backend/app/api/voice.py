@@ -184,8 +184,10 @@ async def get_summary():
     try:
         print("📄 /summary requested")
 
-        summary_text = interview_engine.interview_summary()
-        cleaned = clean_text_for_tts(summary_text)
+        summary_text = interview_engine.interview_summary().strip()
+
+        # VERY LIGHT cleaning → preserves markdown
+        cleaned = summary_text.replace("\r", "")
 
         return {"summary": cleaned}
 
