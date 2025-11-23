@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import FileResponse, JSONResponse
-from google.genai import Client, types
+from google.genai import Client
+from google.genai.types import UploadFileConfig   # ✅ correct import
 from gtts import gTTS
 import os
 import uuid
@@ -8,10 +9,16 @@ import io
 import re
 from app.services.interview_engine import InterviewEngine
 
-# initialize
+# --------------------------------------------------
+# INIT
+# --------------------------------------------------
+print("🔧 Loading Interview Engine & Gemini client...")
+
 interview_engine = InterviewEngine()
 router = APIRouter()
 client = Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+print("✅ Backend initialized successfully.")
 
 
 # --------------------------------------------------
@@ -38,11 +45,15 @@ def clean_text_for_tts(text: str) -> str:
 @router.post("/start-interview")
 async def start_interview_text(payload: dict):
     try:
+        print("📩 /start-interview payload:", payload)
+
         role = (payload.get("role") or "").strip()
         if not role:
             return JSONResponse({"error": "Role missing"}, status_code=400)
 
         question = interview_engine.start_interview(role)
+        print("🧠 FIRST QUESTION:", question)
+
         cleaned_question = clean_text_for_tts(question)
 
         os.makedirs("tmp", exist_ok=True)
@@ -52,6 +63,7 @@ async def start_interview_text(payload: dict):
         try:
             gTTS(text=cleaned_question, lang="en").save(filepath)
         except Exception as e:
+            print("❌ TTS ERROR:", e)
             return JSONResponse({"error": f"TTS failed: {str(e)}"}, status_code=500)
 
         return {
@@ -61,27 +73,18 @@ async def start_interview_text(payload: dict):
         }
 
     except Exception as e:
+        print("❌ start_interview ERROR:", e)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # --------------------------------------------------
-# SPEECH TO TEXT (STRICT VERBATIM)
+# SPEECH-TO-TEXT
 # --------------------------------------------------
-STRICT_ASR_PROMPT = """
-Convert the audio to raw verbatim text exactly as spoken.
-- Do NOT guess the meaning.
-- Do NOT paraphrase or normalize.
-- Do NOT autocorrect short words.
-- If the user says “hello”, return “hello”.
-- Transcribe ONLY the actual spoken sounds, exactly.
-- No punctuation unless clearly spoken.
-Return ONLY the text.
-"""
-
-
 @router.post("/stt")
 async def speech_to_text(file: UploadFile = File(...)):
     try:
+        print("🎧 /stt received file:", file.filename)
+
         audio_bytes = await file.read()
 
         ext = file.filename.split('.')[-1] if file.filename else "webm"
@@ -90,59 +93,47 @@ async def speech_to_text(file: UploadFile = File(...)):
 
         uploaded = client.files.upload(
             file=audio_file,
-            config=types.UploadFileConfig(
+            config=UploadFileConfig(
                 mime_type=file.content_type,
                 display_name="user_audio"
             )
         )
+
+        print("📤 Uploaded audio for STT:", uploaded)
 
         result = client.models.generate_content(
             model="gemini-2.5-flash-lite",
             contents=["Transcribe the following audio to text:", uploaded]
         )
 
+        print("📄 STT Result:", result.text)
+
         return {"text": (result.text or "").strip()}
 
     except Exception as e:
+        print("❌ /stt ERROR:", e)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # --------------------------------------------------
-# TEXT TO SPEECH (TTS)
-# --------------------------------------------------
-@router.post("/tts")
-async def text_to_speech(text: str):
-    try:
-        os.makedirs("tmp", exist_ok=True)
-        filename = f"tts_{uuid.uuid4().hex}.mp3"
-        filepath = f"tmp/{filename}"
-
-        cleaned = clean_text_for_tts(text)
-        gTTS(text=cleaned, lang="en").save(filepath)
-
-        return FileResponse(filepath, media_type="audio/mpeg", filename=filename)
-
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
-# --------------------------------------------------
-# CONTINUE INTERVIEW (VOICE → NEXT QUESTION)
+# CONTINUE INTERVIEW
 # --------------------------------------------------
 @router.post("/continue")
 async def continue_interview_voice(file: UploadFile = File(...)):
     try:
-        audio_bytes = await file.read()
+        print("🎧 /continue received:", file.filename)
 
+        audio_bytes = await file.read()
         ext = file.filename.split('.')[-1] if file.filename else "webm"
+
         audio_io = io.BytesIO(audio_bytes)
         audio_io.name = f"answer_audio.{ext}"
 
         uploaded = client.files.upload(
             file=audio_io,
-            config=types.UploadFileConfig(
+            config=UploadFileConfig(
                 mime_type=file.content_type,
-                display_name="answer-audio"
+                display_name="answer_audio"
             )
         )
 
@@ -152,7 +143,8 @@ async def continue_interview_voice(file: UploadFile = File(...)):
         )
         answer_text = (stt_result.text or "").strip()
 
-        # Generate next question
+        print("🗣 USER ANSWER:", answer_text)
+
         result = interview_engine.next_question(answer_text)
 
         if isinstance(result, dict):
@@ -162,11 +154,13 @@ async def continue_interview_voice(file: UploadFile = File(...)):
             text = str(result)
             meta = {}
 
+        print("🧠 NEXT QUESTION:", text)
+        print("ℹ META:", meta)
+
         cleaned_text = clean_text_for_tts(text)
         audio_filename = None
 
         if meta.get("action") in ("confirm_dig", "ask", "ask_followup"):
-            os.makedirs("tmp", exist_ok=True)
             audio_filename = f"tts_{uuid.uuid4().hex}.mp3"
             gTTS(text=cleaned_text, lang="en").save(f"tmp/{audio_filename}")
 
@@ -178,61 +172,7 @@ async def continue_interview_voice(file: UploadFile = File(...)):
         }
 
     except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
-# --------------------------------------------------
-# DIG ENDPOINT
-# --------------------------------------------------
-@router.post("/dig")
-async def handle_dig(payload: dict):
-    try:
-        confirm = (payload.get("confirm") or "").strip().lower()
-        pending = interview_engine.state.get("pending", {})
-        followup_q = pending.pop("followup_q", None) if pending else None
-
-        if confirm.startswith("y") and followup_q:
-            cleaned = clean_text_for_tts(followup_q)
-            filename = f"tts_{uuid.uuid4().hex}.mp3"
-
-            os.makedirs("tmp", exist_ok=True)
-            gTTS(text=cleaned, lang="en").save(f"tmp/{filename}")
-
-            interview_engine.state.setdefault("history", []).append({
-                "interviewer": followup_q
-            })
-            interview_engine.state["pending"] = {}
-
-            return {
-                "message_text": cleaned,
-                "message_audio": filename,
-                "meta": {"action": "ask_followup"}
-            }
-
-        # No → continue normally
-        result = interview_engine.next_question("")
-        if isinstance(result, dict):
-            text = result.get("text", "")
-            meta = result.get("meta", {})
-        else:
-            text = str(result)
-            meta = {}
-
-        cleaned = clean_text_for_tts(text)
-        filename = f"tts_{uuid.uuid4().hex}.mp3"
-
-        os.makedirs("tmp", exist_ok=True)
-        gTTS(text=cleaned, lang="en").save(f"tmp/{filename}")
-
-        interview_engine.state.setdefault("history", []).append({"interviewer": text})
-
-        return {
-            "message_text": cleaned,
-            "message_audio": filename,
-            "meta": {"action": "ask"}
-        }
-
-    except Exception as e:
+        print("❌ /continue ERROR:", e)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
@@ -242,8 +182,13 @@ async def handle_dig(payload: dict):
 @router.get("/summary")
 async def get_summary():
     try:
+        print("📄 /summary requested")
+
         summary_text = interview_engine.interview_summary()
         cleaned = clean_text_for_tts(summary_text)
+
         return {"summary": cleaned}
+
     except Exception as e:
+        print("❌ /summary ERROR:", e)
         return JSONResponse({"error": str(e)}, status_code=500)
