@@ -126,28 +126,12 @@ Generates detailed final summary
 This showcases advanced backend logic, state management, and AI prompting skills.
 
 📁 Project Structure
-backend/
- ├── app/
- │   ├── api/
- │   │   └── voice.py
- │   ├── services/
- │   │   └── interview_engine.py
- │   └── main.py
- ├── tmp/
- └── requirements.txt
 
-frontend/
- ├── src/
- │   ├── App.jsx
- │   ├── components/
- │   │   ├── MicButton.jsx
- │   │   ├── ChatMessage.jsx
- │   │   ├── RoleSelector.jsx
- │   │   └── SummaryModal.jsx
- │   └── index.js
- └── public/
+<img width="355" height="689" alt="image" src="https://github.com/user-attachments/assets/fada0020-2a5b-4fd2-8421-e66ce62292e8" />
+
 
 ⚙️ Installation & Setup
+
 1️⃣ Backend
 cd backend
 python -m venv venv
@@ -228,6 +212,7 @@ Google Gemini Team
 FastAPI Community
 
 React Community
+
 
 
 
